@@ -1,13 +1,11 @@
 package com.aluracursos.screenmatch.principal;
 
-import com.aluracursos.screenmatch.model.DatosSerie;
-import com.aluracursos.screenmatch.model.DatosTemporadas;
-import com.aluracursos.screenmatch.model.Episodio;
-import com.aluracursos.screenmatch.model.Serie;
+import com.aluracursos.screenmatch.model.*;
 import com.aluracursos.screenmatch.repository.SerieRepository;
 import com.aluracursos.screenmatch.service.ConsumoAPI;
 import com.aluracursos.screenmatch.service.ConvierteDatos;
 
+import java.text.Normalizer;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,6 +18,8 @@ public class Principal {
     private List<DatosSerie> datosSeries = new ArrayList<>();
     private SerieRepository repositorio;
     private List<Serie>series;
+
+
     public Principal(SerieRepository repository) {
         this.repositorio= repository;
     }
@@ -32,6 +32,9 @@ public class Principal {
                     1 - Buscar series 
                     2 - Buscar episodios
                     3 - Mostrar series buscadas
+                    4 - Buscar series por titulo
+                    5 - Top 5 mejores series
+                    6 - Buscar series por categoria
                                   
                     0 - Salir
                     """;
@@ -53,6 +56,15 @@ public class Principal {
                     break;
                 case 3:
                     mostrarSeriesBuscadas();
+                    break;
+                case 4:
+                    buscarSeriesPorTitulo();
+                    break;
+                case 5:
+                    buscarTop5();
+                    break;
+                case 6:
+                    buscarSeriesPorCategoria();
                     break;
                 case 0:
                     System.out.println("Cerrando la aplicación...");
@@ -100,8 +112,6 @@ public class Principal {
             repositorio.save(serieEncontrada);
         }
 
-
-
     }
     private void buscarSerieWeb() {
         DatosSerie datos = getDatosSerie();
@@ -116,6 +126,39 @@ public class Principal {
         series.stream()
                         .sorted(Comparator.comparing(Serie::getGenero))
                         .forEach(System.out::println);
+    }
+
+    private void buscarSeriesPorTitulo() {
+        System.out.println("Ingrese titulo de serie a buscar");
+        var nombreSerie = teclado.nextLine();
+
+        Optional<Serie> serieBuscada = repositorio.findByTituloContainsIgnoreCase(nombreSerie);
+
+        if(serieBuscada.isPresent()){
+            System.out.println("La serie buscada es: " + serieBuscada.get());
+        }else {
+            System.out.println("Serie no encontrada");
+        }
+    }
+    private void  buscarTop5(){
+
+        List<Serie> topSeries = repositorio.findTop5ByOrderByEvaluacionDesc();
+        topSeries.forEach(s -> System.out.println("Serie: " + s.getTitulo() + "Evaluacion: " + s.getEvaluacion()));
+    }
+    private void buscarSeriesPorCategoria(){
+        System.out.println("Escriba el genero/categoria de la serie a buscar");
+        var genero = teclado.nextLine();
+        var categoria = Categoria.fromEpanol(normalizarTexto(genero));
+        List<Serie> seriesPorCategoria = repositorio.findByGenero(categoria);
+        System.out.println("Las series por categoria "+categoria);
+        seriesPorCategoria.forEach(System.out::println);
+    }
+
+//Elimina tildes
+    private String normalizarTexto(String texto) {
+        return Normalizer.normalize(texto, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .toLowerCase();
     }
 
 }
