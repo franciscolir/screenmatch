@@ -18,6 +18,7 @@ public class Principal {
     private List<DatosSerie> datosSeries = new ArrayList<>();
     private SerieRepository repositorio;
     private List<Serie>series;
+    private Optional<Serie> serieBuscada;
 
 
     public Principal(SerieRepository repository) {
@@ -35,15 +36,19 @@ public class Principal {
                     4 - Buscar series por titulo
                     5 - Top 5 mejores series
                     6 - Buscar series por categoria
-                                  
+                    7 - Buscar por maximo de temporadas y minimo de evaluacion
+                    8 - Buscar episodios por titulo
+                    9 - Top 5 episodios por Serie  
+                        
                     0 - Salir
                     """;
 
             System.out.println(menu);
-            while (!teclado.hasNextInt()){
+            /*while (!teclado.hasNextInt()){
                 System.out.println("ingrese solo numeros");
                 teclado.next();
-            }
+            }*/
+            scannerSoloNumeros();
             opcion = teclado.nextInt();
             teclado.nextLine();
 
@@ -65,6 +70,15 @@ public class Principal {
                     break;
                 case 6:
                     buscarSeriesPorCategoria();
+                    break;
+                case 7:
+                    buscarPorMaxTemporadasYMinDeEvaluacion();
+                    break;
+                case 8:
+                    buscarEpisodiosPorTitulo();
+                    break;
+                case 9:
+                    buscarTop5Episodios();
                     break;
                 case 0:
                     System.out.println("Cerrando la aplicación...");
@@ -154,12 +168,52 @@ public class Principal {
         seriesPorCategoria.forEach(System.out::println);
     }
 
-//Elimina tildes
+    private void buscarPorMaxTemporadasYMinDeEvaluacion(){
+        System.out.println("indique el maximo de temporadas");
+        scannerSoloNumeros();
+        var totalTemporadas = teclado.nextInt();
+        System.out.println("indique Evaluacion minima");
+        scannerSoloNumeros();
+        var evaluacion = teclado.nextDouble();
+        List<Serie> seriesBuscadas = repositorio.seriesPorTemparadaYEvaluacion(totalTemporadas,evaluacion);
+        System.out.println("Las series con un Maximo de "+totalTemporadas+ " temporadas y Minimo "+evaluacion+" de evaluacion son las siguentes:");
+        seriesBuscadas.forEach(s ->
+                System.out.println(s.getTitulo() + "  - evaluacion: " + s.getEvaluacion()));
+    }
+    private void  buscarEpisodiosPorTitulo(){
+        System.out.println("Escribe el nombre del episodio que deseas buscar");
+        var nombreEpisodio = teclado.nextLine();
+        List<Episodio> episodiosEncontrados = repositorio.episodiosPorNombre(nombreEpisodio);
+        episodiosEncontrados.forEach(e ->
+                System.out.printf("Serie: %s Temporada %s Episodio %s Evaluación %s\n",
+                        e.getSerie().getTitulo(), e.getTemporada(), e.getNumeroEpisodio(), e.getEvaluacion()));
+
+    }
+
+    private void buscarTop5Episodios(){
+        buscarSeriesPorTitulo();
+        if(serieBuscada.isPresent()){
+            Serie serie = serieBuscada.get();
+            List<Episodio> topEpisodios = repositorio.top5Episodios(serie);
+            topEpisodios.forEach(e ->
+                    System.out.printf("Serie: %s - Temporada %s - Episodio %s - Evaluación %s\n",
+                            e.getSerie().getTitulo(), e.getTemporada(), e.getTitulo(), e.getEvaluacion()));
+
+        }}
+
+    //Elimina tildes
     private String normalizarTexto(String texto) {
         return Normalizer.normalize(texto, Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
                 .toLowerCase();
     }
 
+    //filtro de opcion para solo permitir numeros
+    private void scannerSoloNumeros(){
+        while (!teclado.hasNextInt()){
+            System.out.println("ingrese solo numeros");
+            teclado.next();
+        }
+    }
 }
 
