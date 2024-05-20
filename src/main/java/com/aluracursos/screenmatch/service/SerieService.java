@@ -62,4 +62,11 @@ public class SerieService {
         Categoria categoria = Categoria.fromEpanol(nombreGenero);
         return convierteDatos(repository.findByGenero(categoria));
     }
+
+
+    public List<EpisodioDTO> obtenerTop5Episodios(Long id) {
+        return repository.top5EpisodiosPorSerie(id).stream()
+                .map(e-> new EpisodioDTO(e.getTemporada(), e.getTitulo(),
+                        e.getNumeroEpisodio())).collect(Collectors.toList());
+    }
 }
