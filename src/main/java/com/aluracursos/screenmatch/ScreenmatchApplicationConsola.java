@@ -16,5 +16,4 @@ public class ScreenmatchApplicationConsola {
 		SpringApplication.run(ScreenmatchApplicationConsola.class, args);
 	}
 
-}
-*/
+}*/
